@@ -29,7 +29,7 @@ class ConversionQuery(BaseModel):
     amount: Union[int, float] = Field(..., description="The amount to convert")
 
     @root_validator(allow_reuse=True)
-    def validate_amount(cls, values):
+    def validate_currency_symbol(cls, values):
         from_cur = values.get('from_currency')
         to_cur = values.get('to_currency')
         if not result['symbols'].get(from_cur):
@@ -59,14 +59,17 @@ class HistoricalQuery(BaseModel):
     symbols: Optional[List[str]] = Field(None, description="The list of symbols to include in the historical rates")
 
     @root_validator(allow_reuse=True)
-    def validate_dates(cls, values):
+    def validate_dates_and_symbols(cls, values):
+        # Validate that the start date is not greater than the end date
         if values.get('start_date') > values.get('end_date'):
             raise ValueError("Start date cannot be after end date")
 
         base_cur = values.get('base_currency')
+        # Check that the base currency is part of the acceptable currency
         if not result['symbols'].get(base_cur):
             raise ValueError(f"{base_cur} is not a valid currency")
         sym = values.get('symbols')
+        # Iterate through the list of symbols to see if the symbols given is part of the accepted currency symbols
         if sym:
             for s in sym:
                 if not result['symbols'].get(s):

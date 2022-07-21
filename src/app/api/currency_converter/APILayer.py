@@ -24,6 +24,8 @@ class FixerCurrencyConverter(BaseCurrencyConverterAPI, ABC):
 
     @lru_cache(None)
     async def get_symbols(self):
+        # Use LRU Cache to store the result from this endpoint, so we don't have
+        # to keep going back to fetch the same thing
         url = self.base_url + '/symbols'
         async with httpx.AsyncClient(timeout=None) as client:
             response = await client.get(url, headers=self.headers)
@@ -59,6 +61,9 @@ class FixerCurrencyConverter(BaseCurrencyConverterAPI, ABC):
 
     @lru_cache(None)
     def get_symbols_sync(self):
+        # This is made synchronous because this is needed in the validator, just in case someone enters a symbol that
+        # is not part of the available symbol we wouldn't have to hit the endpoint for that. That is also a big reason
+        # for caching the result of this function.
         url = self.base_url + '/symbols'
         response = httpx.get(url, headers=self.headers, timeout=None)
         return response.json()
