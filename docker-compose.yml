@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./src
+    command: |
+      bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000'
+    volumes:
+      - ./src/:/usr/src/app/
+    ports:
+      - 8002:8000
+    environment:
+      - DATABASE_URL=postgresql://currency_converter:password@db/currency_converter_db
+      - POSTGRES_USER=currency_converter
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=currency_converter_db
+      - POSTGRES_HOST=db
+      - SECRET_KEY=ARANDOMSEecretKey
+      - API_BASE_URL=https://api.apilayer.com/fixer
+      - APILAYER_API_KEY=QdumIk0nOctZXVDcvkfUUPAFEPoKaGIN
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=currency_converter
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=currency_converter_db
+
+volumes:
+  postgres_data:
